@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib import messages
+from django.shortcuts import redirect
 from .forms import ContactForm, ProductModelForm
 from .models import Product
 
@@ -26,17 +27,20 @@ def contact(request):
 
 
 def product(request):
-    if str(request.method) == 'POST':
-        form = ProductModelForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Produto salvo com sucesso.')
-            form = ProductModelForm()
+    if str(request.user) != 'AnonymousUser':
+        if str(request.method) == 'POST':
+            form = ProductModelForm(request.POST, request.FILES)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Produto salvo com sucesso.')
+                form = ProductModelForm()
+            else:
+                messages.error(request, 'Produto não foi salvo.')
         else:
-            messages.error(request, 'Produto não foi salvo.')
+            form = ProductModelForm()
+        context = {
+            'form': form
+        }
+        return render(request, 'product.html', context)
     else:
-        form = ProductModelForm()
-    context = {
-        'form': form
-    }
-    return render(request, 'product.html', context)
+        return redirect('index')
